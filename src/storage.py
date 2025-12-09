@@ -214,7 +214,7 @@ def upload_photo(
         # Step 4: Upload to Supabase Storage
         supabase.storage.from_("baby-photos").upload(
             path=file_path,
-            file=optimized_buffer,
+            file=optimized_buffer.getvalue(),  # Convert BytesIO to bytes
             file_options={
                 "content-type": "image/jpeg",
                 "upsert": "false"  # Don't overwrite existing files

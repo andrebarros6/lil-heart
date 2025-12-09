@@ -156,41 +156,41 @@ try:
             use_container_width=True
         )
 
-        if submitted:
-            # Convert 0.0 to None (means not measured)
-            weight = weight_kg if weight_kg > 0 else None
-            height = height_cm if height_cm > 0 else None
+    # Handle form submission OUTSIDE the form
+    if submitted:
+        # Convert 0.0 to None (means not measured)
+        weight = weight_kg if weight_kg > 0 else None
+        height = height_cm if height_cm > 0 else None
 
-            if weight is None and height is None:
-                st.error("❌ Please enter at least weight or height")
+        if weight is None and height is None:
+            st.error("❌ Please enter at least weight or height")
+        else:
+            with st.spinner("Saving measurement..."):
+                success, message, measurement_id = add_measurement(
+                    supabase=supabase,
+                    baby_id=baby_id,
+                    measurement_date=measurement_date,
+                    weight_kg=weight,
+                    height_cm=height,
+                    notes=notes,
+                    user_id=get_user_id()
+                )
+
+            if success:
+                st.success(message)
+                st.balloons()
+
+                # Show navigation links (page_link works outside forms)
+                col_a, col_b, col_c = st.columns(3)
+                with col_a:
+                    st.page_link("pages/2_📏_Add_Measurement.py", label="📏 Add Another", icon="➕")
+                with col_b:
+                    st.page_link("app.py", label="👀 View Timeline", icon="🏠")
+                with col_c:
+                    st.page_link("pages/3_📊_Growth_Chart.py", label="📊 Growth Chart", icon="📈")
+
             else:
-                with st.spinner("Saving measurement..."):
-                    success, message, measurement_id = add_measurement(
-                        supabase=supabase,
-                        baby_id=baby_id,
-                        measurement_date=measurement_date,
-                        weight_kg=weight,
-                        height_cm=height,
-                        notes=notes,
-                        user_id=get_user_id()
-                    )
-
-                if success:
-                    st.success(message)
-                    st.balloons()
-
-                    # Show link to timeline or growth chart
-                    col_a, col_b, col_c = st.columns(3)
-                    with col_a:
-                        if st.button("📏 Add Another", use_container_width=True):
-                            st.rerun()
-                    with col_b:
-                        st.page_link("app.py", label="👀 View Timeline", icon="🏠")
-                    with col_c:
-                        st.page_link("pages/3_📊_Growth_Chart.py", label="📊 Growth Chart", icon="📈")
-
-                else:
-                    st.error(message)
+                st.error(message)
 
     # ========================================================================
     # Step 4: Measurement history with edit/delete
