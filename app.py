@@ -286,10 +286,16 @@ def show_timeline():
 
                         with col_img:
                             # Display photo thumbnail
-                            st.image(
-                                photo_data["file_url"],
-                                use_container_width=True
-                            )
+                            try:
+                                st.image(
+                                    photo_data["file_url"],
+                                    use_container_width=True
+                                )
+                            except Exception as e:
+                                st.error(f"Could not load image")
+                                with st.expander("Debug info"):
+                                    st.write(f"URL: {photo_data['file_url']}")
+                                    st.write(f"Error: {str(e)}")
 
                         with col_info:
                             # Photo date

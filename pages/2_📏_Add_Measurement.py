@@ -181,13 +181,11 @@ try:
                 st.balloons()
 
                 # Show navigation links (page_link works outside forms)
-                col_a, col_b, col_c = st.columns(3)
+                col_a, col_b = st.columns(2)
                 with col_a:
                     st.page_link("pages/2_📏_Add_Measurement.py", label="📏 Add Another", icon="➕")
                 with col_b:
                     st.page_link("app.py", label="👀 View Timeline", icon="🏠")
-                with col_c:
-                    st.page_link("pages/3_📊_Growth_Chart.py", label="📊 Growth Chart", icon="📈")
 
             else:
                 st.error(message)
