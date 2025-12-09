@@ -221,8 +221,13 @@ def upload_photo(
             }
         )
 
-        # Step 5: Get public URL (even though bucket is private, URL is needed for auth access)
-        file_url = supabase.storage.from_("baby-photos").get_public_url(file_path)
+        # Step 5: Create signed URL (works with private buckets, expires in 1 year)
+        # Note: For production, consider making bucket public or regenerating signed URLs periodically
+        signed_url_response = supabase.storage.from_("baby-photos").create_signed_url(
+            file_path,
+            expires_in=31536000  # 1 year in seconds
+        )
+        file_url = signed_url_response.get("signedURL") or signed_url_response.get("signedUrl")
 
         # Step 6: Save metadata to database
         photo_data = {
