@@ -57,8 +57,9 @@ try:
     # ========================================================================
     # Step 2: Show statistics dashboard
     # ========================================================================
-    stats = get_growth_statistics(supabase, baby_id)
-    latest = get_latest_measurement(supabase, baby_id)
+    with st.spinner("Calculating statistics..."):
+        stats = get_growth_statistics(supabase, baby_id)
+        latest = get_latest_measurement(supabase, baby_id)
 
     st.subheader(f"{baby_name}'s Growth Stats")
     st.caption(f"👶 {format_age(baby_birthdate)}")

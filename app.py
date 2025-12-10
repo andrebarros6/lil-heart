@@ -13,6 +13,8 @@ from src.auth import (
     get_supabase_client,
     init_supabase
 )
+from src.sharing import validate_share_token
+from src.ui_helpers import load_css
 
 # ============================================================================
 # Page Configuration (MUST be first Streamlit command)
@@ -24,6 +26,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# ============================================================================
+# Load Custom Styles
+# ============================================================================
+load_css()
 
 # ============================================================================
 # Main Application
@@ -214,22 +220,23 @@ def show_timeline():
             )
 
         # Fetch data
-        photos_response = supabase.table("photos") \
-            .select("*") \
-            .eq("baby_id", baby_id) \
-            .order("photo_date", desc=True) \
-            .limit(50) \
-            .execute()
+        with st.spinner("Loading timeline..."):
+            photos_response = supabase.table("photos") \
+                .select("*") \
+                .eq("baby_id", baby_id) \
+                .order("photo_date", desc=True) \
+                .limit(50) \
+                .execute()
 
-        measurements_response = supabase.table("measurements") \
-            .select("*") \
-            .eq("baby_id", baby_id) \
-            .order("measurement_date", desc=True) \
-            .limit(50) \
-            .execute()
+            measurements_response = supabase.table("measurements") \
+                .select("*") \
+                .eq("baby_id", baby_id) \
+                .order("measurement_date", desc=True) \
+                .limit(50) \
+                .execute()
 
-        photos = photos_response.data if photos_response.data else []
-        measurements = measurements_response.data if measurements_response.data else []
+            photos = photos_response.data if photos_response.data else []
+            measurements = measurements_response.data if measurements_response.data else []
 
         # ========================================================================
         # Step 3: Combine and sort timeline items
@@ -287,9 +294,15 @@ def show_timeline():
                         with col_img:
                             # Display photo thumbnail
                             try:
+                                # Build accessible alt text
+                                alt_text = f"{baby_name}'s photo from {photo_data['photo_date']}"
+                                if photo_data.get("caption"):
+                                    alt_text += f": {photo_data['caption']}"
+
                                 st.image(
                                     photo_data["file_url"],
-                                    use_container_width=True
+                                    caption=alt_text,
+                                    use_column_width=True
                                 )
                             except Exception as e:
                                 st.error(f"Could not load image")
@@ -353,15 +366,154 @@ def show_timeline():
         st.exception(e)  # Show full stack trace in development
 
 
+def show_viewer_login(share_token: str):
+    """Display password prompt for password-protected share links"""
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        st.title("🔒 Password Required")
+        st.write("This timeline is password-protected")
+
+        # Password form
+        with st.form("viewer_password_form"):
+            password = st.text_input(
+                "Enter password",
+                type="password",
+                placeholder="Ask the family for the password",
+                help="Password was set by the timeline admin"
+            )
+
+            submitted = st.form_submit_button("🔓 View Timeline", use_container_width=True)
+
+            if submitted:
+                if not password:
+                    st.error("❌ Please enter the password")
+                else:
+                    with st.spinner("Validating..."):
+                        supabase = init_supabase()
+                        is_valid, result = validate_share_token(supabase, share_token, password)
+
+                    if is_valid:
+                        # Store validated session
+                        st.session_state["viewer_authenticated"] = True
+                        st.session_state["viewer_baby_id"] = result
+                        st.session_state["viewer_mode"] = True
+                        st.success("✅ Access granted!")
+                        st.balloons()
+                        import time
+                        time.sleep(0.5)
+                        st.rerun()
+                    else:
+                        st.error(result)
+
+        st.divider()
+        st.caption("💡 Don't have the password? Ask the family member who shared this link with you.")
+
+
+def show_viewer_sidebar(baby_name: str):
+    """Display sidebar for viewer mode (read-only)"""
+
+    with st.sidebar:
+        # Viewer status
+        st.markdown("### 👀 View-Only Mode")
+        st.caption(f"Viewing: **{baby_name}'s Timeline**")
+
+        st.divider()
+
+        # Limited navigation info
+        st.markdown("### 📱 Available Views")
+        st.info("""
+        You can:
+        - 📸 View photos
+        - 📏 See measurements
+        - 📊 Check growth charts
+
+        _(Upload and edit disabled)_
+        """)
+
+        st.divider()
+
+        # Exit viewer mode
+        if st.button("🚪 Exit Viewer Mode", use_container_width=True, type="secondary"):
+            # Clear viewer session
+            for key in ["viewer_authenticated", "viewer_baby_id", "viewer_mode"]:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
+
+
 def main():
     """Main application entry point"""
 
-    # Check authentication status
-    if not is_authenticated():
-        # Show login page
+    # ========================================================================
+    # Step 1: Check for share token (viewer mode)
+    # ========================================================================
+    query_params = st.query_params
+    share_token = query_params.get("share_token")
+
+    if share_token:
+        # ==================== Viewer Mode ====================
+        # Check if already validated
+        if st.session_state.get("viewer_authenticated") and \
+           st.session_state.get("viewer_baby_id"):
+            # Viewer is authenticated - show read-only timeline
+            baby_id = st.session_state["viewer_baby_id"]
+
+            try:
+                supabase = init_supabase()
+
+                # Fetch baby info
+                baby_result = supabase.table("babies").select("*").eq("baby_id", baby_id).execute()
+
+                if not baby_result.data:
+                    st.error("❌ Timeline not found or access has been revoked")
+                    st.info("The share link may have been deactivated by the family. Please ask for a new link.")
+                    st.stop()
+
+                baby = baby_result.data[0]
+                baby_name = baby["name"]
+
+                # Show viewer sidebar and timeline (read-only)
+                show_viewer_sidebar(baby_name)
+
+                # Show timeline with viewer mode flag
+                st.session_state["viewer_mode"] = True
+                show_timeline()
+
+            except Exception as e:
+                st.error(f"❌ Error loading timeline: {str(e)}")
+                st.info("Please try refreshing the page. If the problem persists, ask for a new share link.")
+
+        else:
+            # Token exists but not validated yet
+            # Check if password is required
+            supabase = init_supabase()
+            is_valid, result = validate_share_token(supabase, share_token, password=None)
+
+            if is_valid:
+                # No password required - grant access
+                st.session_state["viewer_authenticated"] = True
+                st.session_state["viewer_baby_id"] = result
+                st.session_state["viewer_mode"] = True
+                st.rerun()
+            elif result == "password_required":
+                # Password required - show password form
+                show_viewer_login(share_token)
+            else:
+                # Invalid or expired token
+                st.error(result)
+                st.info("💡 The share link may be invalid or expired. Please ask the family for a new link.")
+                st.stop()
+
+    # ========================================================================
+    # Step 2: Normal admin authentication flow
+    # ========================================================================
+    elif not is_authenticated():
+        # Show login page for admins
         show_login_page()
     else:
-        # Show main app
+        # Admin authenticated - show full app
         show_sidebar()
         show_timeline()
 

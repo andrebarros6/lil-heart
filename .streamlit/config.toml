@@ -1,11 +1,21 @@
 [theme]
-primaryColor = "#FF6B6B"
+# Primary brand color (for buttons, links, accents)
+primaryColor = "#FF6B9D"
+
+# Background color (main content area)
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
+
+# Secondary background (sidebar, cards)
+secondaryBackgroundColor = "#F8F9FA"
+
+# Text color
 textColor = "#262730"
+
+# Font family
 font = "sans serif"
 
 [server]
-headless = true
-enableXsrfProtection = true
-enableCORS = false
+fileWatcherType = "auto"
+
+[browser]
+gatherUsageStats = false

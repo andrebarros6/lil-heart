@@ -86,7 +86,7 @@ try:
         with col_preview:
             st.markdown("#### Preview")
             try:
-                st.image(uploaded_file, use_container_width=True)
+                st.image(uploaded_file, caption="Photo preview", use_column_width=True)
             except Exception as e:
                 st.error(f"❌ Could not display preview: {str(e)}")
 
@@ -135,7 +135,7 @@ try:
             st.divider()
 
             # Upload button
-            if st.button("📤 Upload Photo", type="primary", use_container_width=True):
+            if st.button("📤 Upload Photo", type="primary", use_column_width=True):
                 if file_size_mb > 10:
                     st.error("❌ File too large. Maximum size is 10 MB.")
                 else:
@@ -160,7 +160,7 @@ try:
 
                         col_a, col_b = st.columns(2)
                         with col_a:
-                            if st.button("📸 Upload Another", use_container_width=True):
+                            if st.button("📸 Upload Another", use_column_width=True):
                                 st.rerun()
                         with col_b:
                             st.page_link("app.py", label="👀 View Timeline", icon="🏠")
@@ -217,12 +217,13 @@ try:
     st.divider()
 
     with st.expander("📋 Recent Uploads", expanded=False):
-        recent_photos = supabase.table("photos") \
-            .select("*") \
-            .eq("baby_id", baby_id) \
-            .order("upload_date", desc=True) \
-            .limit(5) \
-            .execute()
+        with st.spinner("Loading recent uploads..."):
+            recent_photos = supabase.table("photos") \
+                .select("*") \
+                .eq("baby_id", baby_id) \
+                .order("upload_date", desc=True) \
+                .limit(5) \
+                .execute()
 
         if recent_photos.data:
             st.caption(f"Last {len(recent_photos.data)} photos uploaded")
@@ -231,7 +232,12 @@ try:
                 col_thumb, col_info = st.columns([1, 4])
 
                 with col_thumb:
-                    st.image(photo["file_url"], use_container_width=True)
+                    # Build accessible alt text
+                    alt_text = f"Recent upload from {photo['photo_date']}"
+                    if photo.get("caption"):
+                        alt_text += f": {photo['caption']}"
+
+                    st.image(photo["file_url"], caption=alt_text, use_column_width=True)
 
                 with col_info:
                     st.markdown(f"**📅 {photo['photo_date']}**")

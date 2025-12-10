@@ -7,6 +7,17 @@ import streamlit as st
 from supabase import Client
 from datetime import datetime, date
 from typing import List, Dict, Optional, Tuple
+from src.constants import (
+    MIN_WEIGHT_KG,
+    MAX_WEIGHT_KG,
+    MIN_HEIGHT_CM,
+    MAX_HEIGHT_CM,
+    MAX_NOTES_LENGTH
+)
+from src.validators import validate_weight, validate_height
+from src.logger import setup_logger
+
+logger = setup_logger(__name__)
 
 
 # ============================================================================
@@ -39,8 +50,8 @@ def add_measurement(
 
     Validation:
         - At least one of weight or height must be provided
-        - Weight: 0.5 - 50 kg (reasonable baby/toddler range)
-        - Height: 30 - 200 cm (reasonable baby/toddler range)
+        - Weight: Uses MIN_WEIGHT_KG - MAX_WEIGHT_KG range (see constants.py)
+        - Height: Uses MIN_HEIGHT_CM - MAX_HEIGHT_CM range (see constants.py)
 
     Example:
         success, msg, id = add_measurement(
@@ -53,12 +64,16 @@ def add_measurement(
             return False, "❌ Please enter at least weight or height", None
 
         # Validate weight range
-        if weight_kg is not None and (weight_kg < 0.5 or weight_kg > 50):
-            return False, "❌ Weight must be between 0.5 and 50 kg", None
+        if weight_kg is not None:
+            is_valid, error_msg = validate_weight(weight_kg)
+            if not is_valid:
+                return False, error_msg, None
 
         # Validate height range
-        if height_cm is not None and (height_cm < 30 or height_cm > 200):
-            return False, "❌ Height must be between 30 and 200 cm", None
+        if height_cm is not None:
+            is_valid, error_msg = validate_height(height_cm)
+            if not is_valid:
+                return False, error_msg, None
 
         # Prepare data
         measurement_data = {
@@ -66,7 +81,7 @@ def add_measurement(
             "measurement_date": measurement_date.strftime("%Y-%m-%d"),
             "weight_kg": weight_kg,
             "height_cm": height_cm,
-            "notes": notes[:500] if notes else None,  # Enforce 500 char limit
+            "notes": notes[:MAX_NOTES_LENGTH] if notes else None,  # Enforce character limit
             "recorded_by": user_id
         }
 
@@ -124,7 +139,7 @@ def get_measurements(
     Example:
         measurements = get_measurements(supabase, baby_id, limit=10)
         for m in measurements:
-            print(f"{m['measurement_date']}: {m['weight_kg']} kg")
+            logger.debug(f"{m['measurement_date']}: {m['weight_kg']} kg")
     """
     try:
         query = supabase.table("measurements") \
@@ -140,7 +155,7 @@ def get_measurements(
         return result.data if result.data else []
 
     except Exception as e:
-        print(f"Error fetching measurements: {e}")
+        logger.error(f"Error fetching measurements: {e}", exc_info=True)
         return []
 
 
@@ -167,7 +182,7 @@ def get_measurement_by_id(
         return result.data[0] if result.data else None
 
     except Exception as e:
-        print(f"Error fetching measurement: {e}")
+        logger.error(f"Error fetching measurement: {e}", exc_info=True)
         return None
 
 
@@ -200,17 +215,19 @@ def update_measurement(
         update_data = {}
 
         if weight_kg is not None:
-            if weight_kg < 0.5 or weight_kg > 50:
-                return False, "❌ Weight must be between 0.5 and 50 kg"
+            is_valid, error_msg = validate_weight(weight_kg)
+            if not is_valid:
+                return False, error_msg
             update_data["weight_kg"] = weight_kg
 
         if height_cm is not None:
-            if height_cm < 30 or height_cm > 200:
-                return False, "❌ Height must be between 30 and 200 cm"
+            is_valid, error_msg = validate_height(height_cm)
+            if not is_valid:
+                return False, error_msg
             update_data["height_cm"] = height_cm
 
         if notes is not None:
-            update_data["notes"] = notes[:500]
+            update_data["notes"] = notes[:MAX_NOTES_LENGTH]
 
         if not update_data:
             return False, "❌ No changes to update"
@@ -282,7 +299,7 @@ def get_measurements_count(supabase: Client, baby_id: str) -> int:
         return result.count or 0
 
     except Exception as e:
-        print(f"Error counting measurements: {e}")
+        logger.error(f"Error counting measurements: {e}", exc_info=True)
         return 0
 
 
@@ -340,7 +357,7 @@ def get_measurements_by_date_range(
         return result.data if result.data else []
 
     except Exception as e:
-        print(f"Error fetching measurements by date range: {e}")
+        logger.error(f"Error fetching measurements by date range: {e}", exc_info=True)
         return []
 
 
@@ -376,7 +393,7 @@ def get_baby_info(supabase: Client, baby_id: str) -> Optional[Dict]:
         return result.data[0] if result.data else None
 
     except Exception as e:
-        print(f"Error fetching baby info: {e}")
+        logger.error(f"Error fetching baby info: {e}", exc_info=True)
         return None
 
 
@@ -511,7 +528,7 @@ def get_growth_statistics(supabase: Client, baby_id: str) -> Dict:
         }
 
     except Exception as e:
-        print(f"Error calculating growth statistics: {e}")
+        logger.error(f"Error calculating growth statistics: {e}", exc_info=True)
         return {
             "total_measurements": 0,
             "first_measurement_date": None,

@@ -10,6 +10,9 @@ from datetime import datetime
 import streamlit as st
 from supabase import Client
 from typing import Tuple, Optional
+from src.logger import setup_logger
+
+logger = setup_logger(__name__)
 
 
 def optimize_image(uploaded_file, max_width: int = 1920, quality: int = 85) -> Tuple[BytesIO, dict]:
@@ -119,7 +122,7 @@ def extract_exif_date(uploaded_file) -> Optional[datetime]:
 
     except Exception as e:
         # EXIF extraction is optional - fail silently
-        print(f"EXIF extraction failed (non-fatal): {e}")
+        logger.warning(f"EXIF extraction failed (non-fatal): {e}")
         return None
 
 
@@ -221,11 +224,12 @@ def upload_photo(
             }
         )
 
-        # Step 5: Create signed URL (works with private buckets, expires in 1 year)
-        # Note: For production, consider making bucket public or regenerating signed URLs periodically
+        # Step 5: Create signed URL (works with private buckets)
+        # Expires in 10 years (315360000 seconds) - essentially permanent for family photos
+        # Note: For true permanence, consider making bucket public or implementing URL refresh logic
         signed_url_response = supabase.storage.from_("baby-photos").create_signed_url(
             file_path,
-            expires_in=31536000  # 1 year in seconds
+            expires_in=315360000  # 10 years in seconds
         )
         file_url = signed_url_response.get("signedURL") or signed_url_response.get("signedUrl")
 
@@ -366,7 +370,7 @@ def get_storage_usage(supabase: Client, baby_id: str) -> dict:
         }
 
     except Exception as e:
-        print(f"Error getting storage usage: {e}")
+        logger.error(f"Error getting storage usage: {e}", exc_info=True)
         return {
             "photo_count": 0,
             "total_size_mb": 0,

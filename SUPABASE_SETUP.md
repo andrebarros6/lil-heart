@@ -76,7 +76,7 @@ This guide walks you through setting up your Supabase project for the Baby Timel
 
 2. **Create bucket:**
    - **Name:** `baby-photos`
-   - **Public:** ❌ **Uncheck this!** (bucket should be private)
+   - **Public:** ❌ **Uncheck this!** (keep bucket private for security)
    - Click **Create bucket**
 
 3. **Set Storage Policies:**
@@ -94,15 +94,20 @@ This guide walks you through setting up your Supabase project for the Baby Timel
      ```
    - Click **Review** → **Save policy**
 
-   **Policy 2: Allow public reads** (we control access via RLS on photos table)
-   - Click **New policy**
-   - **Policy name:** `Public read photos`
+   **Policy 2: Allow authenticated reads**
+   - Click **New policy** again
+   - **Policy name:** `Authenticated read photos`
    - **Policy command:** `SELECT`
    - **Policy definition:**
      ```sql
-     bucket_id = 'baby-photos'
+     bucket_id = 'baby-photos' AND auth.role() = 'authenticated'
      ```
    - Click **Review** → **Save policy**
+
+   **Why private bucket?**
+   - Better security: Only authenticated users can access storage
+   - We use signed URLs (expire in 10 years) for long-term access
+   - Even if URLs leak, they're tied to specific files, not entire bucket
 
 ## Step 5: Create First Admin User
 
@@ -229,7 +234,7 @@ Keep these in mind as you develop:
 **Supabase Dashboard:** https://supabase.com/dashboard
 **Project URL:** (saved in `.env`)
 **Admin Email:** (created in Step 5)
-**Storage Bucket:** `baby-photos` (private)
+**Storage Bucket:** `baby-photos` (private, with signed URLs)
 
 **Tables:**
 - `babies` - Baby profiles

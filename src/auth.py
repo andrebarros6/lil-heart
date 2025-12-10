@@ -35,7 +35,11 @@ def init_supabase() -> Client:
             "See SUPABASE_SETUP.md for details."
         )
 
-    return create_client(url, key)
+    # Create client with explicit named parameters (compatible with supabase-py 2.7+)
+    return create_client(
+        supabase_url=url,
+        supabase_key=key
+    )
 
 
 def login(email: str, password: str) -> Tuple[bool, str]:
