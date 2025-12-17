@@ -9,8 +9,9 @@ import os
 from dotenv import load_dotenv
 from typing import Tuple, Optional
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from .env file (local development only)
+# On Streamlit Cloud, use the Secrets management in dashboard instead
+load_dotenv(override=False)
 
 
 def init_supabase() -> Client:
@@ -29,9 +30,11 @@ def init_supabase() -> Client:
     if not url or not key:
         raise ValueError(
             "❌ Supabase credentials not found!\n\n"
-            "Please create a `.env` file with:\n"
-            "SUPABASE_URL=your_url\n"
-            "SUPABASE_ANON_KEY=your_key\n\n"
+            "Local development: Create a `.env` file with:\n"
+            "  SUPABASE_URL=your_url\n"
+            "  SUPABASE_ANON_KEY=your_key\n\n"
+            "Streamlit Cloud: Add secrets in your app dashboard:\n"
+            "  Settings → Secrets → Add the same variables\n\n"
             "See SUPABASE_SETUP.md for details."
         )
 
