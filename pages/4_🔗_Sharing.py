@@ -61,16 +61,53 @@ try:
 
         # Build shareable URL
         share_token = active_link["share_token"]
-        base_url = os.getenv("BASE_URL", "http://localhost:8501")
-        share_url = f"{base_url}/?share_token={share_token}"
 
-        # Display link in copyable format
-        st.code(share_url, language=None)
+        # Get base URL from environment variable or use placeholder
+        base_url = os.getenv("BASE_URL", "")
+
+        if base_url:
+            # Full URL is available
+            share_url = f"{base_url}/?share_token={share_token}"
+            st.markdown("**Your share link:**")
+            st.code(share_url, language=None)
+            st.caption("📋 Copy the link above and share via WhatsApp, Email, etc.")
+        else:
+            # No BASE_URL configured - show token and instructions
+            st.warning("⚠️ **BASE_URL not configured** - Set this in Streamlit Secrets to generate full share links")
+
+            st.markdown("**Share Token:**")
+            st.code(share_token, language=None)
+
+            st.info(f"""
+**To share your timeline:**
+
+**Option 1: Manual URL (Quick Fix)**
+1. Copy the token above
+2. Construct your share link:
+   ```
+   https://your-app-name.streamlit.app/?share_token={share_token}
+   ```
+3. Replace `your-app-name.streamlit.app` with your actual Streamlit Cloud URL
+   (Look at your browser's address bar to find your app's URL)
+
+**Option 2: Configure BASE_URL (Permanent Fix)**
+1. Go to your Streamlit Cloud dashboard
+2. Open **Settings** → **Secrets**
+3. Add this line:
+   ```
+   BASE_URL = "https://your-app-name.streamlit.app"
+   ```
+4. Replace with your actual URL (without trailing slash)
+5. Save and the app will automatically generate full links
+            """)
 
         col_copy, col_preview, col_revoke = st.columns(3)
 
         with col_copy:
-            st.caption("📋 Copy the link above and share via WhatsApp, Email, etc.")
+            if base_url:
+                st.caption("✅ Ready to share")
+            else:
+                st.caption("⚠️ Configure BASE_URL")
 
         with col_preview:
             if st.button("👀 Preview (View Only Mode)", use_container_width=True):

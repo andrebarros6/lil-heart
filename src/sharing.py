@@ -73,9 +73,9 @@ def generate_share_link(
             raise Exception("Database insert failed - no data returned")
 
         # Build shareable URL
-        # Base URL from environment variable (falls back to localhost for development)
+        # Get base URL from environment variable
+        # If not configured, return token with instructions (handled by UI)
         base_url = os.getenv("BASE_URL", "http://localhost:8501")
-
         share_url = f"{base_url}/?share_token={share_token}"
 
         return True, share_url, share_token
