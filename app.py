@@ -209,10 +209,17 @@ def show_timeline():
         # Step 2: Fetch photos and measurements for timeline
         # ========================================================================
 
-        col1, col2 = st.columns([3, 1])
+        col1, col2, col3 = st.columns([2, 1, 1])
         with col1:
             st.markdown(f"### {baby_name}'s Timeline")
         with col2:
+            sort_order = st.selectbox(
+                "Sort",
+                ["Newest First", "Oldest First"],
+                label_visibility="collapsed",
+                key="timeline_sort_order"
+            )
+        with col3:
             filter_option = st.selectbox(
                 "Filter",
                 ["All", "Photos Only", "Measurements Only"],
@@ -262,8 +269,9 @@ def show_timeline():
                     "data": measurement
                 })
 
-        # Sort by date (newest first)
-        timeline_items.sort(key=lambda x: x["date"], reverse=True)
+        # Sort by date based on user preference
+        reverse_sort = (sort_order == "Newest First")
+        timeline_items.sort(key=lambda x: x["date"], reverse=reverse_sort)
 
         # ========================================================================
         # Step 4: Display timeline
@@ -302,7 +310,7 @@ def show_timeline():
                                 st.image(
                                     photo_data["file_url"],
                                     caption=alt_text,
-                                    use_column_width=True
+                                    use_container_width=True
                                 )
                             except Exception as e:
                                 st.error(f"Could not load image")
