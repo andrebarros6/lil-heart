@@ -20,7 +20,7 @@ from src.ui_helpers import load_css
 # Page Configuration (MUST be first Streamlit command)
 # ============================================================================
 st.set_page_config(
-    page_title="Baby Timeline",
+    page_title="👶 Timeline",
     page_icon="👶",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -215,7 +215,7 @@ def show_timeline():
         with col2:
             sort_order = st.selectbox(
                 "Sort",
-                ["Newest First", "Oldest First"],
+                ["Oldest First", "Newest First"],
                 label_visibility="collapsed",
                 key="timeline_sort_order"
             )
