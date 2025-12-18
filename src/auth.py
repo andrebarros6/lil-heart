@@ -199,7 +199,7 @@ def require_auth():
         st.warning("Please log in to access this page.")
 
         # Provide link to main page (login screen)
-        st.page_link("app.py", label="← Go to Login", icon="🔐")
+        st.page_link("Timeline.py", label="← Go to Login", icon="🔐")
 
         st.stop()
 

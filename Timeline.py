@@ -20,7 +20,7 @@ from src.ui_helpers import load_css
 # Page Configuration (MUST be first Streamlit command)
 # ============================================================================
 st.set_page_config(
-    page_title="👶 Timeline",
+    page_title="Timeline",
     page_icon="👶",
     layout="wide",
     initial_sidebar_state="expanded"

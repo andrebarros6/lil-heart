@@ -37,7 +37,7 @@ try:
 
     if not babies.data:
         st.error("❌ No baby profile found. Please create one from the main page.")
-        st.page_link("app.py", label="← Back to Main Page", icon="🏠")
+        st.page_link("Timeline.py", label="← Back to Main Page", icon="🏠")
         st.stop()
 
     baby = babies.data[0]
@@ -163,7 +163,7 @@ try:
                             if st.button("📸 Upload Another", use_container_width=True):
                                 st.rerun()
                         with col_b:
-                            st.page_link("app.py", label="👀 View Timeline", icon="🏠")
+                            st.page_link("Timeline.py", label="👀 View Timeline", icon="🏠")
 
                     else:
                         st.error(message)

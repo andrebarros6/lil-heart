@@ -34,7 +34,7 @@ is_viewer = st.session_state.get("viewer_mode") and st.session_state.get("viewer
 
 if not is_admin and not is_viewer:
     st.error("🔒 Access denied. Please log in or use a valid share link.")
-    st.page_link("app.py", label="← Back to Main Page", icon="🏠")
+    st.page_link("Timeline.py", label="← Back to Main Page", icon="🏠")
     st.stop()
 
 # ============================================================================
@@ -64,7 +64,7 @@ try:
 
     if not babies.data:
         st.error("❌ No baby profile found. Please create one from the main page.")
-        st.page_link("app.py", label="← Back to Main Page", icon="🏠")
+        st.page_link("Timeline.py", label="← Back to Main Page", icon="🏠")
         st.stop()
 
     baby = babies.data[0]
@@ -95,7 +95,7 @@ try:
         with col_a:
             st.page_link("pages/2_📏_Add_Measurement.py", label="📏 Add Measurement", icon="➕")
         with col_b:
-            st.page_link("app.py", label="👀 View Timeline", icon="🏠")
+            st.page_link("Timeline.py", label="👀 View Timeline", icon="🏠")
 
         st.stop()
 

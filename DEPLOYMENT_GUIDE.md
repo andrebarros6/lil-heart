@@ -8,7 +8,7 @@
 2. Go to [share.streamlit.io](https://share.streamlit.io)
 3. Click "New app"
 4. Select your repository and branch
-5. Set main file path: `app.py`
+5. Set main file path: `Timeline.py`
 6. Click "Deploy"
 
 ### 2. Configure Secrets
@@ -49,7 +49,7 @@ https://your-app-name.streamlit.app
 or
 
 ```
-https://share.streamlit.io/your-username/your-repo/main/app.py
+https://share.streamlit.io/your-username/your-repo/main/Timeline.py
 ```
 
 **To find it:**

@@ -61,14 +61,14 @@ A digital family photo album where parents can document their baby's growth with
 
 6. **Run the app:**
    ```bash
-   streamlit run app.py
+   streamlit run Timeline.py
    ```
 
 ## 📁 Project Structure
 
 ```
 lil_heart/
-├── app.py                      # Main entry point
+├── Timeline.py                      # Main entry point
 ├── requirements.txt            # Python dependencies
 ├── .env.example                # Environment template
 ├── .streamlit/config.toml      # Streamlit theme

@@ -46,7 +46,7 @@ try:
 
     if not babies.data:
         st.error("❌ No baby profile found. Please create one from the main page.")
-        st.page_link("app.py", label="← Back to Main Page", icon="🏠")
+        st.page_link("Timeline.py", label="← Back to Main Page", icon="🏠")
         st.stop()
 
     baby = babies.data[0]
@@ -186,7 +186,7 @@ try:
                 with col_a:
                     st.page_link("pages/2_📏_Add_Measurement.py", label="📏 Add Another", icon="➕")
                 with col_b:
-                    st.page_link("app.py", label="👀 View Timeline", icon="🏠")
+                    st.page_link("Timeline.py", label="👀 View Timeline", icon="🏠")
 
             else:
                 st.error(message)
